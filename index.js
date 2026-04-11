@@ -26,7 +26,7 @@ app.post("/ussd", async (req, res) => {
 
     console.log(req.body);
 
-    let { text = "", phoneNumber } = req.body;
+    let { text = "", phoneNumber = "" } = req.body || {};
     text = text.trim();
 
     let response = "";
@@ -37,6 +37,16 @@ app.post("/ussd", async (req, res) => {
         user = await User.create({ phoneNumber, balance: 1000 });
     }
 
+// (your logic continues...)
+
+        res.setHeader("Content-Type", "text/plain");
+        res.send(response);
+
+    } catch (error) {
+        console.log(error);
+        res.send("END System error, try again");
+    }
+});
     // 🏠 MAIN MENU
     if (text === "") {
         response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
