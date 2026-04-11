@@ -1,76 +1,57 @@
 const express = require("express");
 const app = express();
-const mongoose = require("mongoose");
 
-// BODY PARSER
+// Parse USSD requests
 app.use(express.urlencoded({ extended: false }));
 
-// MONGODB CONNECT
-mongoose.connect("mongodb+srv://Summitlink:summit9876@summitlinkcluster.t4qvdqt.mongodb.net/?retryWrites=true&w=majority")
-.then(() => console.log("MongoDB connected"))
-.catch(err => console.log(err));
-
-// USER MODEL
-const UserSchema = new mongoose.Schema({
-    phoneNumber: String,
-    balance: { type: Number, default: 1000 }
-});
-
-const User = mongoose.model("User", UserSchema);
-
-// HOME ROUTE
+// TEST ROUTE
 app.get("/", (req, res) => {
-    res.send("USSD service is running 🚀");
+    res.send("SummitLink USSD is LIVE 🚀");
 });
 
-// USSD ROUTE (CLEAN FIXED VERSION)
-app.post("/ussd", async (req, res) => {
+// USSD ROUTE (SIMPLE + STABLE)
+app.post("/ussd", (req, res) => {
 
-    console.log(req.body); // DEBUG
+    console.log(req.body); // see requests in logs
 
-    let { text = "", phoneNumber } = req.body;
-
+    let { text = "" } = req.body;
     text = text.trim();
 
     let response = "";
 
-    // FIND OR CREATE USER
-    let user = await User.findOne({ phoneNumber });
-
-    if (!user) {
-        user = await User.create({
-            phoneNumber,
-            balance: 1000
-        });
-    }
-
-    // MENU
+    // MAIN MENU
     if (text === "") {
         response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
     }
 
+    // ACCOUNT
     else if (text === "1") {
         response = "CON My Account\n1. Check Balance\n2. Wallet Info";
     }
-
     else if (text === "1*1") {
-        response = `END Your balance is ₦${user.balance}`;
+        response = "END Your balance is ₦1000";
+    }
+    else if (text === "1*2") {
+        response = "END Wallet is active";
     }
 
+    // DATA
     else if (text === "2") {
         response = "CON Buy Data\n1. 1GB - ₦300\n2. 2GB - ₦500";
     }
-
     else if (text === "2*1") {
-        if (user.balance >= 300) {
-            user.balance -= 300;
-            await user.save();
-            response = "END You bought 1GB for ₦300";
-        } else {
-            response = "END Insufficient balance";
-        }
+        response = "END You bought 1GB";
+    }
+    else if (text === "2*2") {
+        response = "END You bought 2GB";
     }
 
+    // SUPPORT
+    else if (text === "3") {
+        response = "END Contact: support@summitlink.ng";
+    }
+
+    // INVALID
     else {
         response = "END Invalid input";
     }
@@ -79,8 +60,8 @@ app.post("/ussd", async (req, res) => {
     res.send(response);
 });
 
-// SERVER START
+// SERVER
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log("USSD running on port " + PORT);
+    console.log("Server running on port " + PORT);
 });
