@@ -35,7 +35,7 @@ app.post("/ussd", async (req, res) => {
         let user = await User.findOne({ phoneNumber });
 
         if (!user) {
-            user = await User.create({ phoneNumber, balance: 1000 });
+            user = await User.create({ phoneNumber, email, balance: 1000 });
         }
 app.post("/paystack-webhook", express.json(), async (req, res) => {
     try {
