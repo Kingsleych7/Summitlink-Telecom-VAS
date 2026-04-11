@@ -1,17 +1,16 @@
-// 1. IMPORTS
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 
-// 2. BODY PARSER
+// BODY PARSER
 app.use(express.urlencoded({ extended: false }));
 
-// 3. MONGODB CONNECT (KEEP THIS)
+// MONGODB CONNECT
 mongoose.connect("mongodb+srv://Summitlink:summit9876@summitlinkcluster.t4qvdqt.mongodb.net/?retryWrites=true&w=majority")
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
 
-// 4. USER MODEL
+// USER MODEL
 const UserSchema = new mongoose.Schema({
     phoneNumber: String,
     balance: { type: Number, default: 1000 }
@@ -19,25 +18,25 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", UserSchema);
 
-// 5. ROUTES
+// HOME ROUTE
 app.get("/", (req, res) => {
     res.send("USSD service is running 🚀");
 });
 
-// 6. USSD ROUTE (FIXED LOGIC GOES HERE)
-app.post("/ussd", async (req, res) => {
-    const { text = "", phoneNumber } = req.body;
+// USSD ROUTE (CLEAN FIXED VERSION)
 app.post("/ussd", async (req, res) => {
 
-    console.log(req.body); // 👈 ADD THIS LINE
+    console.log(req.body); // DEBUG
 
-    const { text = "", phoneNumber } = req.body;
+    let { text = "", phoneNumber } = req.body;
+
+    text = text.trim();
+
     let response = "";
 
+    // FIND OR CREATE USER
     let user = await User.findOne({ phoneNumber });
-text = text.trim(); // 👈 IMPORTANT FIX
 
-    let response = "";
     if (!user) {
         user = await User.create({
             phoneNumber,
@@ -45,12 +44,21 @@ text = text.trim(); // 👈 IMPORTANT FIX
         });
     }
 
+    // MENU
     if (text === "") {
         response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
     }
-text = text.trim();
-     if (text.trim() === "1*1") {
+
+    else if (text === "1") {
+        response = "CON My Account\n1. Check Balance\n2. Wallet Info";
+    }
+
+    else if (text === "1*1") {
         response = `END Your balance is ₦${user.balance}`;
+    }
+
+    else if (text === "2") {
+        response = "CON Buy Data\n1. 1GB - ₦300\n2. 2GB - ₦500";
     }
 
     else if (text === "2*1") {
@@ -71,6 +79,8 @@ text = text.trim();
     res.send(response);
 });
 
-// 7. SERVER START
+// SERVER START
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("USSD running"));
+app.listen(PORT, () => {
+    console.log("USSD running on port " + PORT);
+});
