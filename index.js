@@ -1,10 +1,10 @@
-8const express = require("express");
+const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 
 app.use(express.urlencoded({ extended: false }));
 
-// 🔗 CONNECT TO MONGODB
+// 🔗 CONNECT MONGODB
 mongoose.connect("mongodb+srv://Summitlink:summit9876@summitlinkcluster.t4qvdqt.mongodb.net/?retryWrites=true&w=majority")
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log(err));
@@ -18,10 +18,10 @@ const User = mongoose.model("User", UserSchema);
 
 // 🌐 TEST ROUTE
 app.get("/", (req, res) => {
-    res.send("SummitLink USSD + DB LIVE 🚀");
+    res.send("SummitLink USSD LIVE 🚀");
 });
 
-// 📡 USSD ROUTE
+// 📡 USSD ROUTE (ONLY ONE — VERY IMPORTANT)
 app.post("/ussd", async (req, res) => {
     try {
         console.log(req.body);
@@ -37,89 +37,90 @@ app.post("/ussd", async (req, res) => {
             user = await User.create({ phoneNumber, balance: 1000 });
         }
 
-        
-    // 🏠 MAIN MENU
-    if (text === "") {
-        response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
-    }
+        // MAIN MENU
+        if (text === "") {
+            response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
+        }
 
-    // 👤 ACCOUNT
-    else if (text === "1") {
-        response = "CON My Account\n1. Check Balance\n2. Wallet Info";
-    }
-    else if (text === "1*1") {
-        response = `END Your balance is ₦${user.balance}`;
-    }
-    else if (text === "1*2") {
-        response = "END Wallet is active";
-    }
+        // ACCOUNT
+        else if (text === "1") {
+            response = "CON My Account\n1. Check Balance";
+        }
 
-    // 📡 DATA MENU (UPDATED)
-    else if (text === "2") {
-        response =
+        else if (text === "1*1") {
+            response = `END Your balance is ₦${user.balance}`;
+        }
+
+        // DATA MENU
+        else if (text === "2") {
+            response =
 `CON Buy Data
 1. 1GB - ₦300
 2. 2GB - ₦500
 3. 3GB - ₦800
 4. 5GB - ₦1200`;
-    }
-
-    // 📶 BUY 1GB
-    else if (text === "2*1") {
-        if (user.balance >= 300) {
-            user.balance -= 300;
-            await user.save();
-            response = "END You bought 1GB for ₦300";
-        } else {
-            response = "END Insufficient balance";
         }
-    }
 
-    // 📶 BUY 2GB
-    else if (text === "2*2") {
-        if (user.balance >= 500) {
-            user.balance -= 500;
-            await user.save();
-            response = "END You bought 2GB for ₦500";
-        } else {
-            response = "END Insufficient balance";
+        // BUY 1GB
+        else if (text === "2*1") {
+            if (user.balance >= 300) {
+                user.balance -= 300;
+                await user.save();
+                response = "END You bought 1GB";
+            } else {
+                response = "END Insufficient balance";
+            }
         }
-    }
 
-    // 📶 BUY 3GB
-    else if (text === "2*3") {
-        if (user.balance >= 800) {
-            user.balance -= 800;
-            await user.save();
-            response = "END You bought 3GB for ₦800";
-        } else {
-            response = "END Insufficient balance";
+        // BUY 2GB
+        else if (text === "2*2") {
+            if (user.balance >= 500) {
+                user.balance -= 500;
+                await user.save();
+                response = "END You bought 2GB";
+            } else {
+                response = "END Insufficient balance";
+            }
         }
-    }
 
-    // 📶 BUY 5GB
-    else if (text === "2*4") {
-        if (user.balance >= 1200) {
-            user.balance -= 1200;
-            await user.save();
-            response = "END You bought 5GB for ₦1200";
-        } else {
-            response = "END Insufficient balance";
+        // BUY 3GB
+        else if (text === "2*3") {
+            if (user.balance >= 800) {
+                user.balance -= 800;
+                await user.save();
+                response = "END You bought 3GB";
+            } else {
+                response = "END Insufficient balance";
+            }
         }
-    }
 
-    // 📞 SUPPORT
-    else if (text === "3") {
-        response = "END Contact: support@summitlink.ng";
-    }
+        // BUY 5GB
+        else if (text === "2*4") {
+            if (user.balance >= 1200) {
+                user.balance -= 1200;
+                await user.save();
+                response = "END You bought 5GB";
+            } else {
+                response = "END Insufficient balance";
+            }
+        }
 
-    // ❌ INVALID
-    else {
-        response = "END Invalid input";
-    }
+        // SUPPORT
+        else if (text === "3") {
+            response = "END Contact: support@summitlink.ng";
+        }
 
-    res.setHeader("Content-Type", "text/plain");
-    res.send(response);
+        else {
+            response = "END Invalid input";
+        }
+
+        res.setHeader("Content-Type", "text/plain");
+        res.send(response);
+
+    } catch (error) {
+        console.log(error);
+        res.send("END System error");
+    }
 });
 
 // 🚀 SERVER
