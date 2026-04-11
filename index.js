@@ -23,30 +23,19 @@ app.get("/", (req, res) => {
 
 // 📡 USSD ROUTE
 app.post("/ussd", async (req, res) => {
+    try {
 
-    console.log(req.body);
-
-    let { text = "", phoneNumber = "" } = req.body || {};
-    text = text.trim();
-
-    let response = "";
-
-    // 🔍 FIND OR CREATE USER
-    let user = await User.findOne({ phoneNumber });
-    if (!user) {
-        user = await User.create({ phoneNumber, balance: 1000 });
-    }
-
-// (your logic continues...)
+        // ALL YOUR LOGIC HERE (buy data, balance, etc)
 
         res.setHeader("Content-Type", "text/plain");
         res.send(response);
 
     } catch (error) {
         console.log(error);
-        res.send("END System error, try again");
+        res.send("END System error");
     }
 });
+
     // 🏠 MAIN MENU
     if (text === "") {
         response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
