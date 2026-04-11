@@ -24,6 +24,7 @@ app.get("/", (req, res) => {
 // 📡 USSD ROUTE
 app.post("/ussd", async (req, res) => {
     try {
+    
 
         // ALL YOUR LOGIC HERE (buy data, balance, etc)
 
