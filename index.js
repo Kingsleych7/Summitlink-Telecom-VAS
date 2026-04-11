@@ -39,9 +39,8 @@ app.post("/ussd", async (req, res) => {
 
         // MAIN MENU
         if (text === "") {
-            response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Support";
-        }
-
+    response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Fund Wallet\n4. Support";
+}
         // ACCOUNT
         else if (text === "1") {
             response = "CON My Account\n1. Check Balance";
@@ -107,9 +106,8 @@ app.post("/ussd", async (req, res) => {
 
         // SUPPORT
         else if (text === "3") {
-            response = "END Contact: support@summitlink.ng";
-        }
-
+           response = "END To fund wallet, visit: https://paystack.com/pay/summitlink";
+}
         else {
             response = "END Invalid input";
         }
