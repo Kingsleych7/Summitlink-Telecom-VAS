@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 app.use(express.urlencoded({ extended: false }));
 
 // 🔗 CONNECT MONGODB
-mongoose.connect("mongodb+srv://Summitlink:SummitLink_DB2026@cluster0.xt2kxhu.mongodb.net/summitlinkDB?retryWrites=true&w=majority")
+mongoose.connect("mongodb+srv://summitlink:SummitLink2026DB@cluster0.xt2kxhu.mongodb.net/summitlink?retryWrites=true&w=majority")
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log("DB ERROR:", err)); 
 
