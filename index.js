@@ -109,19 +109,18 @@ app.post("/ussd", async (req, res) => {
     }
 });
  
-
 app.get("/paystack/pay/:phone/:amount", async (req, res) => {
     try {
         const { phone, amount } = req.params;
 
-        let user = await User.findOne({ phoneNumber: phone });
+        const user = await User.findOne({ phoneNumber: phone });
 
         const response = await axios.post(
             "https://api.paystack.co/transaction/initialize",
             {
                 email: user.email,
-                amount: amount * 100, // kobo
-                callback_url: "https://your-backend.com/paystack/verify"
+                amount: amount * 100,
+                callback_url: "https://your-domain.com/success"
             },
             {
                 headers: {
