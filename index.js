@@ -1,8 +1,10 @@
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
+const axios = require("axios");
 
 app.use(express.urlencoded({ extended: false }));
+app.use(express.json()); // REQUIRED for Paystack webhook
 
 // 🔗 CONNECT MONGODB
 mongoose.connect("mongodb+srv://testuser:testpass123@cluster0.xt2kxhu.mongodb.net/testdb?retryWrites=true&w=majority")
