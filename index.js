@@ -158,6 +158,62 @@ app.post("/ussd", async (req, res) => {
         res.send("END System error");
     }
 });
+const axios = require("axios");
+
+app.get("/paystack/pay/:phone/:amount", async (req, res) => {
+    try {
+        const { phone, amount } = req.params;
+
+        let user = await User.findOne({ phoneNumber: phone });
+
+        const response = await axios.post(
+            "https://api.paystack.co/transaction/initialize",
+            {
+                email: user.email,
+                amount: amount * 100, // kobo
+                callback_url: "https://your-backend.com/paystack/verify"
+            },
+            {
+                headers: {
+                    Authorization: `Bearer YOUR_SECRET_KEY`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        res.redirect(response.data.data.authorization_url);
+
+    } catch (err) {
+        console.log(err);
+        res.send("Payment error");
+    }
+});
+
+app.post("/paystack-webhook", async (req, res) => {
+    try {
+        const event = req.body;
+
+        if (event.event === "charge.success") {
+            const email = event.data.customer.email;
+            const amount = event.data.amount / 100;
+
+            let user = await User.findOne({ email });
+
+            if (user) {
+                user.balance += amount;
+                await user.save();
+
+                console.log("Wallet credited:", amount);
+            }
+        }
+
+        res.sendStatus(200);
+
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(500);
+    }
+});
 
 // 🚀 SERVER
 const PORT = process.env.PORT || 3000;
