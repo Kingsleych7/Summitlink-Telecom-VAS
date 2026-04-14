@@ -25,9 +25,7 @@ app.get("/", (req, res) => {
 // 📡 USSD ROUTE (ONLY ONE — VERY IMPORTANT)
 app.post("/ussd", async (req, res) => {
     try {
-        console.log(req.body);
-
-        let { text = "", phoneNumber = "" } = req.body || {};
+        let { text = "", phoneNumber = "" } = req.body;
         text = text.trim();
 
         let response = "";
@@ -35,38 +33,28 @@ app.post("/ussd", async (req, res) => {
         let user = await User.findOne({ phoneNumber });
 
         if (!user) {
-            user = await User.create({ phoneNumber, email, balance: 1000 });
-        }
-app.post("/paystack-webhook", express.json(), async (req, res) => {
-    try {
-        const event = req.body;
-
-        console.log("Webhook received:", event);
-
-        // ONLY handle successful payments
-        if (event.event === "charge.success") {
-
-            const email = event.data.customer.email;
-            const amount = event.data.amount / 100;
-
-            // find user by email OR phone (depends on your setup)
-            let user = await User.findOne({ email });
-
-            if (user) {
-                user.balance += amount;
-                await user.save();
-                console.log("Wallet credited:", amount);
-            }
+            user = await User.create({
+                phoneNumber,
+                email: phoneNumber + "@test.com",
+                balance: 1000
+            });
         }
 
-        res.sendStatus(200);
+        if (text === "") {
+            response = "CON Welcome to SummitLink\n1. My Account";
+        } else if (text === "1") {
+            response = `END Balance: ₦${user.balance}`;
+        }
+
+        res.send(response);
 
     } catch (err) {
         console.log(err);
-        res.sendStatus(500);
-    }
-});
-        // MAIN MENU
+        res.send("END System error");
+    });
+}
+    
+         // MAIN MENU
         if (text === "") {
     response = "CON Welcome to SummitLink\n1. My Account\n2. Buy Data\n3. Fund Wallet\n4. Register";
 }
