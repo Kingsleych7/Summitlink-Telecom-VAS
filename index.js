@@ -152,6 +152,15 @@ app.post("/paystack-webhook", async (req, res) => {
             if (user) {
                 user.balance += amount;
                 await user.save();
+
+                // 🔥 LOG TRANSACTION
+                await Transaction.create({
+                    phoneNumber: user.phoneNumber,
+                    type: "credit",
+                    amount,
+                    description: "Wallet funding via Paystack"
+                });
+
                 console.log("Wallet credited:", amount);
             }
         }
