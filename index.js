@@ -6,13 +6,23 @@ const axios = require("axios");
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json()); // REQUIRED for Paystack webhook
 
+function normalizePhone(phone) {
+    phone = phone.trim();
+
+    if (phone.startsWith("0")) {
+        return "+234" + phone.slice(1);
+    }
+
+    return phone;
+}
+
 // 🔗 CONNECT MONGODB
 mongoose.connect("mongodb+srv://testuser:testpass123@cluster0.xt2kxhu.mongodb.net/testdb?retryWrites=true&w=majority")
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log("DB ERROR:", err)); 
 
 // 👤 USER MODEL
-const UserSchema = new mongoose.Schema({
+const User = mongoose.model("User", UserSchema);
     phoneNumber: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     balance: { type: Number, default: 0 },
@@ -37,7 +47,8 @@ app.post("/ussd", async (req, res) => {
         let { text = "", phoneNumber = "" } = req.body;
         text = text.trim();
 
-        let user = await User.findOne({ phoneNumber });
+        phoneNumber = normalizePhone(phoneNumber);
+let user = await User.findOne({ phoneNumber });
 
         if (!user) {
             user = await User.create({
