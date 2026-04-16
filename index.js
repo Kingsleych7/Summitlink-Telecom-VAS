@@ -15,6 +15,13 @@ function normalizePhone(phone) {
 
     return phone;
 }
+async function buyAirtime(phone, amount) {
+    return true;
+}
+
+async function buyData(phone, plan) {
+    return true;
+}
 
 // 🔗 CONNECT MONGODB
 mongoose.connect("mongodb+srv://testuser:testpass123@cluster0.xt2kxhu.mongodb.net/testdb?retryWrites=true&w=majority")
