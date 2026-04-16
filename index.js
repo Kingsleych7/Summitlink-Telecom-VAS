@@ -39,13 +39,15 @@ const TransactionSchema = new mongoose.Schema({
 
 const Transaction = mongoose.model("Transaction", TransactionSchema);
 
-const User = mongoose.model("User", UserSchema);
+const UserSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     balance: { type: Number, default: 0 },
 
-    // NEW
-    session: { type: String, default: "" }
+    session: { type: String, default: "" },
+
+    // 🔐 NEW
+    pin: { type: String, default: "1234" }
 });
 
 const TransactionSchema = new mongoose.Schema({
@@ -68,13 +70,28 @@ let user = await User.findOne({ phoneNumber });
         }
 
         let response = "";
+if (text.length === 4 && !text.includes("*")) {
 
+    if (text !== user.pin) {
+        return res.send("END Incorrect PIN");
+    }
+
+    return res.send(
+`CON Welcome Back
+1. Check Balance
+2. Buy Airtime
+3. Buy Data
+4. Fund Wallet
+5. Transaction History`
+    );
+}
         // ======================
         // MAIN MENU
         // ======================
         if (text === "") {
-            response =
-`CON SummitLink VTU
+    response = `CON SummitLink VTU
+Enter your PIN:`;
+}
 1. Check Balance
 2. Buy Airtime
 3. Buy Data
@@ -118,8 +135,10 @@ let user = await User.findOne({ phoneNumber });
                 description: "Airtime purchase"
             });
 
-            response = "END Airtime sent successfully";
-        }
+            response = `END SUCCESS
+Airtime: ₦${amount}
+Phone: ${user.phoneNumber}
+Balance: ₦${user.balance}`;
 
         // ======================
         // DATA FLOW
@@ -150,8 +169,26 @@ let user = await User.findOne({ phoneNumber });
                 amount = 1200;
                 plan = "5GB";
             }
+else if (text === "5") {
 
-            if (user.balance < amount) {
+    const txns = await Transaction.find({ phoneNumber })
+        .sort({ createdAt: -1 })
+        .limit(5);
+
+    if (txns.length === 0) {
+        return res.send("END No transactions found");
+    }
+
+    let responseText = "END Last 5 Transactions:\n";
+
+    txns.forEach(t => {
+        responseText += `${t.type.toUpperCase()} ₦${t.amount} - ${t.description}\n`;
+    });
+
+    return res.send(responseText);
+}
+         if (user.balance < amount) {
+ 
                 return res.send("END Insufficient balance");
             }
 
