@@ -165,7 +165,6 @@ Balance: ₦${user.balance}`);
         }
 
         return res.send("END Invalid option");
-    }
 
         // ======================
 // FUND WALLET
