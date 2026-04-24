@@ -1,8 +1,12 @@
+require("dotenv").config();
+
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
 const axios = require("axios");
 const crypto = require("crypto");
+
+const PORT = process.env.PORT || 10000;
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json()); // REQUIRED for Paystack webhook
@@ -25,9 +29,12 @@ async function buyData(phone, plan) {
 }
 
 // 🔗 CONNECT MONGODB
-mongoose.connect("mongodb+srv://testuser:testpass123@cluster0.xt2kxhu.mongodb.net/testdb?retryWrites=true&w=majority")
+mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB connected"))
-.catch(err => console.log("DB ERROR:", err)); 
+.catch(err => {
+    console.error("DB ERROR:", err);
+    process.exit(1);
+});
 
 // =======================
 // 👤 USER MODEL
@@ -157,7 +164,7 @@ Plan: ${plan}
 Balance: ₦${user.balance}`);
         }
 
-        return res.send("END Invalid option"):
+        return res.send("END Invalid option");
     }
 
         // ======================
@@ -213,34 +220,38 @@ app.get("/paystack/pay/:phone/:amount", async (req, res) => {
     try {
         const { phone, amount } = req.params;
 
-const normalizedPhone = normalizePhone(phone);
-let user = await User.findOne({ phoneNumber: normalizedPhone });
+        const normalizedPhone = normalizePhone(phone);
+        let user = await User.findOne({ phoneNumber: normalizedPhone });
 
+        const response = await axios.post(
             "https://api.paystack.co/transaction/initialize",
             {
                 email: user.email,
                 amount: amount * 100,
+                metadata: {
+                    phoneNumber: normalizedPhone
+                },
                 callback_url: "https://your-backend.com/paystack/verify"
             },
             {
                 headers: {
-                    process.env.PAYSTACK_SECRET
+                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET}`,
                     "Content-Type": "application/json"
                 }
             }
         );
 
-        res.redirect(response.data.data.authorization_url);
+        return res.redirect(response.data.data.authorization_url);
 
     } catch (err) {
-        console.log(err);
+        console.error(err);
         res.send("Payment error");
     }
-});  
+});
 
 app.post("/paystack/webhook", express.json(), async (req, res) => {
   const hash = crypto
-    .createHmac("sha512", PAYSTACK_SECRET_KEY)
+    .createHmac("sha512", process.env.PAYSTACK_SECRET)
     .update(JSON.stringify(req.body))
     .digest("hex");
 
