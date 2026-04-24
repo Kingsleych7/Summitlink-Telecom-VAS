@@ -31,7 +31,8 @@ async function buyData(phone, plan) {
 // 🔗 CONNECT MONGODB
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log("MongoDB connected"))
-.catch(err => console.log("DB ERROR:", err));
+.catch(err => {
+    console.log("DB ERROR:", err);
     process.exit(1);
 });
 
