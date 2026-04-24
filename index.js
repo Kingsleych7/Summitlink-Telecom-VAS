@@ -183,9 +183,11 @@ ${link}`
 // ======================
 if (text === user.pin + "*5") {
 
-    const transactions = await Transaction.find({ phoneNumber })
-        .sort({ createdAt: -1 })
-        .limit(3);
+    const transactions = await Transaction
+  .find({ phoneNumber })
+  .sort({ createdAt: -1 })
+  .limit(3)
+  .lean();
 
     if (transactions.length === 0) {
         return res.send("END No transactions yet");
