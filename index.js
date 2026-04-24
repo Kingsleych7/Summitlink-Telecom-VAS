@@ -91,7 +91,7 @@ app.post("/ussd", async (req, res) => {
         // ======================
         // STEP 2: VERIFY PIN
         // ======================
-        if (text.length === 4 && !text.includes("*")) {
+        else if (text.length === 4 && !text.includes("*")) {
             if (text !== user.pin) {
                 return res.send("END ❌ Incorrect PIN");
             }
@@ -99,13 +99,15 @@ app.post("/ussd", async (req, res) => {
             return res.send(`CON Welcome to SummitLink
 1. Check Balance
 2. Buy Airtime
-3. Buy Data`);
+3. Buy Data
+4. Fund Wallet`
+            );
         }
 
         // ======================
         // BALANCE
         // ======================
-        if (text === user.pin + "*1") {
+        else if (text === user.pin + "*1") {
             return res.send(`END Balance: ₦${user.balance}`);
         }
 
@@ -169,16 +171,15 @@ Balance: ₦${user.balance}`);
         // ======================
 // FUND WALLET
 // ======================
-if (text === user.pin + "*4") {
+// FUND WALLET ✅ FIXED
+        else if (text === user.pin + "*4") {
+            const link = `https://summitlink-vas-1.onrender.com/paystack/pay/${phoneNumber}/1000`;
 
-    const link = `https://summitlink-vas-8.onrender.com/paystack/pay/${phoneNumber}/1000`;
-
-    return res.send(
+            return res.send(
 `END 💳 Fund Wallet
-Click link:
 ${link}`
-    );
-}
+            );
+        }
      
   // ======================
 // TRANSACTION HISTORY
