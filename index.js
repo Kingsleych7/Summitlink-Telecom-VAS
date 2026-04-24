@@ -99,8 +99,7 @@ app.post("/ussd", async (req, res) => {
             return res.send(`CON Welcome to SummitLink
 1. Check Balance
 2. Buy Airtime
-3. Buy Data
-4. Fund Wallet`
+3. Buy Data`
             );
         }
 
