@@ -106,7 +106,7 @@ app.post("/ussd", async (req, res) => {
         // ======================
         // BALANCE
         // ======================
-        else if (text === user.pin + "*1") {
+         if (text === user.pin + "*1") {
             return res.send(`END Balance: ₦${user.balance}`);
         }
 
@@ -171,7 +171,7 @@ Balance: ₦${user.balance}`);
 // FUND WALLET
 // ======================
 // FUND WALLET ✅ FIXED
-        else if (text === user.pin + "*4") {
+   if (text === user.pin + "*4") {
             const link = `https://summitlink-vas-1.onrender.com/paystack/pay/${phoneNumber}/1000`;
 
             return res.send(
