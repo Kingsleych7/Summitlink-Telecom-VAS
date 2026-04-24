@@ -79,91 +79,40 @@ const Transaction = mongoose.model("Transaction", TransactionSchema);
 
         let response = "";
 
-        // ======================
-        // STEP 1: ASK FOR PIN
-        // ======================
-        if (text === "") {
-            response = "CON Welcome to SummitLink\nEnter your PIN:";
-        }
-
-        // ======================
-        // STEP 2: VERIFY PIN
-        // ======================
-        else if (text.length === 4 && !text.includes("*")) {
-
-            if (text !== user.pin) {
-                return res.send("END ❌ Incorrect PIN");
-            }
-
-            return res.send(
-                "CON Welcome Back\n1. My Account\n2. Buy Data\n3. Fund Wallet"
-            );
-        }
-
-        // ======================
-        // STEP 3: MENU ACTIONS
-        // ======================
-        else if (text === user.pin + "*1") {
-            response = `END Balance: ₦${user.balance}`;
-        }
-
-        else if (text === user.pin + "*3") {
-            response = "END Fund your wallet via Paystack link";
-        }
-
-        else {
-            response = "END Invalid option";
-        }
-
-        res.send(response);
-
-    } catch (err) {
-        console.log("USSD ERROR:", err);
-        res.send("END System error");
-    }
-});
-         
-`CON Welcome to SummitLink VTU
-1. Check Balance
-2. Buy Airtime
-3. Buy Data
-4. Fund Wallet
-5. Transaction History`
-            );
-        }
-
-        // ======================
-        // MAIN MENU
-        // ======================
+        // STEP 1: ASK PIN
         if (text === "") {
             return res.send("CON Enter your 4-digit PIN:");
         }
 
-        // ======================
-        // CHECK BALANCE
-        // ======================
-        if (text === "1") {
+        // STEP 2: VERIFY PIN
+        if (text.length === 4 && !text.includes("*")) {
+            if (text !== user.pin) {
+                return res.send("END ❌ Incorrect PIN");
+            }
+
+            return res.send(`CON Welcome to SummitLink VTU
+1. Check Balance
+2. Buy Airtime
+3. Buy Data
+4. Fund Wallet
+5. Transaction History`);
+        }
+
+        // STEP 3: BALANCE
+        if (text === user.pin + "*1") {
             return res.send(`END Balance: ₦${user.balance}`);
         }
 
-        // ======================
-        // AIRTIME FLOW
-        // ======================
-        if (text === "2") {
+        // STEP 4: AIRTIME
+        if (text === user.pin + "*2") {
             return res.send("CON Enter airtime amount:");
         }
 
-        if (text.startsWith("2*")) {
-            const amount = Number(text.split("*")[1]);
+        if (text.startsWith(user.pin + "*2*")) {
+            const amount = Number(text.split("*")[2]);
 
             if (user.balance < amount) {
                 return res.send("END ❌ Insufficient balance");
-            }
-
-            const result = await buyAirtime(user.phoneNumber, amount);
-
-            if (!result) {
-                return res.send("END ❌ Airtime failed");
             }
 
             user.balance -= amount;
@@ -176,12 +125,16 @@ const Transaction = mongoose.model("Transaction", TransactionSchema);
                 description: "Airtime purchase"
             });
 
-            return res.send(
-`END ✅ Airtime Successful
-Amount: ₦${amount}
-Balance: ₦${user.balance}`
-            );
+            return res.send("END ✅ Airtime sent successfully");
         }
+
+        return res.send("END Invalid option");
+
+    } catch (err) {
+        console.log(err);
+        res.send("END System error");
+    }
+ });
 
         // ======================
         // DATA FLOW
