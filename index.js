@@ -29,7 +29,22 @@ mongoose.connect("mongodb+srv://testuser:testpass123@cluster0.xt2kxhu.mongodb.ne
 .then(() => console.log("MongoDB connected"))
 .catch(err => console.log("DB ERROR:", err)); 
 
+// =======================
 // 👤 USER MODEL
+// =======================
+const UserSchema = new mongoose.Schema({
+    phoneNumber: { type: String, required: true, unique: true },
+    email: { type: String, default: "" },
+    balance: { type: Number, default: 0 },
+    pin: { type: String, default: "1234" }
+});
+
+const User = mongoose.model("User", UserSchema);
+
+
+// =======================
+// 💰 TRANSACTION MODEL
+// =======================
 const TransactionSchema = new mongoose.Schema({
     phoneNumber: String,
     type: String, // credit / debit
@@ -39,22 +54,6 @@ const TransactionSchema = new mongoose.Schema({
 });
 
 const Transaction = mongoose.model("Transaction", TransactionSchema);
-
-const UserSchema = new mongoose.Schema({
-    phoneNumber: { type: String, required: true, unique: true },
-    balance: { type: Number, default: 0 },
-
-    session: { type: String, default: "" },
-
-    // 🔐 NEW
-    pin: { type: String, default: "1234" }
-});
-
-const TransactionSchema = new mongoose.Schema({
-  
-if (!phoneNumber) {
-  return res.send("END Missing phone number");
-}
 
 // 🌐 TEST ROUTE
 app.post("/ussd", async (req, res) => {
