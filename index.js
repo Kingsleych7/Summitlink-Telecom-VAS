@@ -294,7 +294,7 @@ if (parts[3] === "0") {
 
  const txs = await Transaction.find({ phoneNumber })
                 .sort({ createdAt: -1 })
-                .limit(3);}
+                .limit(3);
 
             if (!txs.length) return res.send("END No transactions");
 
@@ -303,11 +303,10 @@ if (parts[3] === "0") {
                 msg += `${t.type} ₦${t.amount}\n`;
             });
 
-            return res.send(msg);
+     return res.send(msg);
         }
 
->>>>>>> 33682a0 (local USSD updates)
-        return res.send("END Invalid request");
+     return res.send("END Invalid request");
 
     } catch (err) {
         console.log("USSD ERROR:", err);
