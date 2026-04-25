@@ -114,7 +114,35 @@ app.post("/ussd", async (req, res) => {
 
         let userInput = text.trim();
         const normalizedPhone = normalizePhone(phoneNumber);
+       
+       // 👇 PUT NAVIGATION HANDLER HERE
+        const input = text;
 
+        if (input === "0") {
+            const parts = text.split("*");
+            parts.pop();
+            const newText = parts.join("*");
+
+            if (newText === "") {
+                return res.send(`CON Welcome back
+1. Check Balance
+2. Buy Airtime
+3. Buy Data
+4. Fund Wallet
+5. Transactions`);
+            }
+
+            text = newText;
+        }
+
+        if (input === "00") {
+            return res.send(`CON Welcome back
+1. Check Balance
+2. Buy Airtime
+3. Buy Data
+4. Fund Wallet
+5. Transactions`);
+        }
         let user = await User.findOne({ phoneNumber: normalizedPhone });
 
         if (!user) {
