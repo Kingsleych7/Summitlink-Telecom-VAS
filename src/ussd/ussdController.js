@@ -5,7 +5,7 @@ const { getRequestId } = require("../utils/idempotency");
 const airtimeQueue = require("../services/queue");
 const sendSMS = require("../services/sms");
 
-const User = require("../../models/User");
+const User = require("../models/User");
 const Transaction = require("../../models/Transaction");
 
 module.exports = async (req, res) => {
