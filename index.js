@@ -6,12 +6,31 @@ const mongoose = require("mongoose");
 const axios = require("axios");
 const crypto = require("crypto");
 
+const redis = require("./src/config/redis");
 const PORT = process.env.PORT || 10000;
+
+const Queue = require("bull");
+const airtimeQueue = new Queue("airtime", process.env.REDIS_URL);
+
+const { getRequestId } = require("./src/utils/idempotency");
+
+const airtimeQueue = require("./src/services/queue");
+
+const sendSMS = require("./src/services/sms");
+
+const ussdController = require("./src/ussd/ussdController");
+app.post("/ussd", ussdController);
 
 const africastalking = require("africastalking")({
   apiKey: process.env.AT_API_KEY,
   username: process.env.AT_USERNAME
 });
+
+const rateLimit = require("express-rate-limit");
+app.use("/ussd", rateLimit({
+    windowMs: 60 * 1000,
+    max: 30
+}));
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -63,6 +82,15 @@ async function sendSMS(phone, message) {
 
 async function buyData(phone, plan) {
     return true;
+}
+
+async function getSession(phone) {
+    const raw = await redis.get(phone);
+    return raw ? JSON.parse(raw) : null;
+}
+
+async function saveSession(phone, data) {
+    await redis.set(phone, JSON.stringify(data), "EX", 120);
 }
 
 // =======================
@@ -135,8 +163,7 @@ app.post("/ussd", async (req, res) => {
             text = newText;
         }
 
-        let user = await User.findOne({ phoneNumber: normalizedPhone });
-
+        let user = await airtimeQueue.add({ phone, amount });
         if (!user) {
             user = await User.create({
                 phoneNumber: normalizedPhone,
@@ -145,6 +172,23 @@ app.post("/ussd", async (req, res) => {
                 pin: "1234"
             });
         }
+
+const crypto = require("crypto");
+
+function getRequestId(phone, text) {
+    return crypto.createHash("md5").update(phone + text).digest("hex");
+}
+
+
+const { getSession, saveSession } = require("./src/utils/session");
+const reqId = getRequestId(phoneNumber, text);
+
+if (session.lastReq === reqId) {
+    return res.send("END Duplicate request");
+}
+
+session.lastReq = reqId;
+
 
         // FIRST SCREEN
         if (userInput === "") {
