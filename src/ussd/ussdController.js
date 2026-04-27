@@ -6,7 +6,7 @@ const airtimeQueue = require("../services/queue");
 const sendSMS = require("../services/sms");
 
 const User = require("../models/User");
-const Transaction = require("../../models/Transaction");
+const Transaction = require("../models/Transaction");
 
 module.exports = async (req, res) => {
     try {
