@@ -74,14 +74,25 @@ if (text === "") {
 
         // PIN
         if (session.state === "PIN") {
+
     if (!text) {
         return res.send("CON Enter your 4-digit PIN:");
     }
 
-    if (text !== user.pin) {
+    let isValid = false;
+
+    // support old + new PIN format
+    if (user.pin.length === 4) {
+        isValid = (text === user.pin);
+    } else {
+        isValid = await bcrypt.compare(text, user.pin);
+    }
+
+    if (!isValid) {
         return res.send("END ❌ Incorrect PIN");
     }
 
+    // move to main menu
     session.state = "MAIN_MENU";
     saveSession(normalizedPhone, session);
 
