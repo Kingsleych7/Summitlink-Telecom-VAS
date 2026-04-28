@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const User = require('../models/User');
-const Transaction = require("../../models/Transaction");
+const Transaction = require("../models/Transaction");
 
 const { normalizePhone } = require("../utils/phone");
 const { getSession, saveSession } = require("../utils/session");
