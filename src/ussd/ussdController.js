@@ -3,7 +3,8 @@ const Transaction = require("../models/Transaction");
 
 const { getSession, saveSession } = require("../services/sessionService");
 const { getOrCreateUser } = require("../services/userService");
-
+const airtimeQueue = require("../queues/airtimeQueue");
+const dataQueue = require("../queues/dataQueue");
 const { normalizePhone } = require("../utils/phone");
 const { generateRequestId } = require("../utils/requestId");
 
@@ -92,46 +93,87 @@ module.exports = async (req, res) => {
         // ======================
         if (session.state === "MENU") {
 
-            switch (input) {
+    switch (input) {
 
-                case "1":
-                    return res.send(`END Balance: ₦${user.balance}`);
+        case "1":
+            return res.send(`END Balance: ₦${user.balance}`);
 
-                case "2":
-                    session.state = "AIRTIME";
-                    await saveSession(normalizedPhone, session);
-                    return res.send("CON Enter airtime amount:");
+        case "2":
+            if (session.state === "AIRTIME") {
 
-                case "3":
-                    session.state = "DATA";
-                    await saveSession(normalizedPhone, session);
-                    return res.send(`CON Select plan:
-1. 1GB - ₦300
-2. 2GB - ₦500
-3. 5GB - ₦1200`);
+    const amount = parseInt(input);
 
-                case "4":
-                    return res.send(`END Fund Wallet:
-https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`);
+    if (!amount || amount <= 0) {
+        return res.send("END Invalid amount");
+    }
 
-                case "5":
-                   const { getRecentTransactions } = require("../services/transactionService");
+    await airtimeQueue.add({
+        phoneNumber: normalizedPhone,
+        amount
+    });
 
-                   const txs = await getRecentTransactions(normalizedPhone);
+    session.state = "MENU";
+    await saveSession(normalizedPhone, session);
 
-                    if (!txs.length) return res.send("END No transactions");
+    return res.send("END Airtime request is being processed");
+}
 
-                    let msg = "END Recent Transactions:\n";
-                    txs.forEach(t => {
-                        msg += `${t.type} ₦${t.amount}\n`;
-                    });
+       case "3":
+     if (session.state === "DATA") {
 
-                    return res.send(msg);
+    let plan;
 
-                default:
-                    return res.send("END Invalid option");
+    switch (input) {
+        case "1":
+            plan = "1GB - ₦300";
+            break;
+        case "2":
+            plan = "2GB - ₦500";
+            break;
+        case "3":
+            plan = "5GB - ₦1200";
+            break;
+        default:
+            return res.send("END Invalid plan selected");
+    }
+
+    await dataQueue.add({
+        phoneNumber: normalizedPhone,
+        plan
+    });
+
+    session.state = "MENU";
+    await saveSession(normalizedPhone, session);
+
+    return res.send("END Data purchase is being processed");
+}
+
+
+        case "4":
+            return res.send(
+                `END Fund Wallet:
+https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
+            );
+
+        case "5":
+            const txs = await getRecentTransactions(normalizedPhone);
+
+            if (!txs.length) {
+                return res.send("END No transactions");
             }
-        }
+
+            let msg = "END Recent Transactions:\n";
+
+            txs.forEach(t => {
+                msg += `${t.type} ₦${t.amount}\n`;
+            });
+
+            return res.send(msg);
+
+        default:
+            return res.send("END Invalid option");
+    }
+}
 
         // ======================
         // 8. FALLBACK
