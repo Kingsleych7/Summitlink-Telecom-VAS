@@ -3,7 +3,10 @@
 const { getSession, saveSession } = require("../utils/session");
 const { getRequestId } = require("../utils/idempotency");
 const sendSMS = require("../services/sms");
+const session = getSession(normalizedPhone);
 
+console.log("SESSION STATE:", session.state);
+console.log("INPUT TEXT:", text);
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 const bcrypt = require("bcryptjs");
@@ -81,7 +84,6 @@ if (text === "") {
 
     let isValid = false;
 
-    // support old + new PIN format
     if (user.pin.length === 4) {
         isValid = (text === user.pin);
     } else {
@@ -92,7 +94,7 @@ if (text === "") {
         return res.send("END ❌ Incorrect PIN");
     }
 
-    // move to main menu
+    // ✅ IMPORTANT: MOVE STATE
     session.state = "MAIN_MENU";
     saveSession(normalizedPhone, session);
 
@@ -106,49 +108,53 @@ if (text === "") {
 
         // MENU
  if (session.state === "MAIN_MENU") {
-       if (text === "1") {
-    return res.send(`END Balance: ₦${user.balance}`);
-}
 
-if (text === "2") {
-    session.state = "AIRTIME";
-    saveSession(normalizedPhone, session);
-    return res.send("CON Enter amount:");
-}
+    if (text === "1") {
+        return res.send(`END Balance: ₦${user.balance}`);
+    }
 
-if (text === "3") {
-    session.state = "DATA";
-    saveSession(normalizedPhone, session);
-    return res.send("CON Select data plan");
-}
+    if (text === "2") {
+        session.state = "AIRTIME";
+        saveSession(normalizedPhone, session);
+        return res.send("CON Enter amount:");
+    }
 
-if (text === "0") {
-    session.state = "PIN";
-    saveSession(normalizedPhone, session);
-    return res.send("CON Enter PIN:");
-}
-            if (text === "4") {
-                return res.send(`END 💳 Fund Wallet
+    if (text === "3") {
+        session.state = "DATA";
+        saveSession(normalizedPhone, session);
+        return res.send("CON Select data plan");
+    }
+
+    if (text === "4") {
+        return res.send(`END 💳 Fund Wallet
 https://your-backend.onrender.com/paystack/pay/${phoneNumber}/1000`);
-            }
+    }
 
-            if (text === "5") {
-                const txs = await Transaction.find({ phoneNumber })
-                    .sort({ createdAt: -1 })
-                    .limit(3);
+    if (text === "5") {
+        const txs = await Transaction.find({ phoneNumber })
+            .sort({ createdAt: -1 })
+            .limit(3);
 
-                if (!txs.length) {
-                    return res.send("END No transactions");
-                }
-
-                let msg = "END Recent Transactions:\n";
-                txs.forEach(t => {
-                    msg += `${t.type} ₦${t.amount}\n`;
-                });
-
-                return res.send(msg);
-            }
+        if (!txs.length) {
+            return res.send("END No transactions");
         }
+
+        let msg = "END Recent Transactions:\n";
+        txs.forEach(t => {
+            msg += `${t.type} ₦${t.amount}\n`;
+        });
+
+        return res.send(msg);
+    }
+
+    // ✅ THIS IS WHAT YOU WERE MISSING
+    return res.send(`CON Invalid option
+1. Check Balance
+2. Buy Airtime
+3. Buy Data
+4. Fund Wallet
+5. Transactions`);
+}
 
         // AIRTIME
         if (session.state === "AIRTIME") {
