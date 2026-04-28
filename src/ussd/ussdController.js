@@ -10,6 +10,7 @@ const bcrypt = require("bcryptjs");
 
 module.exports = async (req, res) => {
     try {
+
         const { phoneNumber, text = "" } = req.body;
 
         const normalizedPhone = normalizePhone(phoneNumber);
@@ -19,9 +20,9 @@ module.exports = async (req, res) => {
         console.log("SESSION:", session.state);
         console.log("INPUT:", input);
 
-if (text === "") {
-    return res.send("CON Enter your 4-digit PIN:");
-}
+        if (text === "") {
+            return res.send("CON Enter your 4-digit PIN:");
+        }
 
         // ======================
         // LOAD SESSION
