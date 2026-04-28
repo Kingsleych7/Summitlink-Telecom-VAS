@@ -115,9 +115,9 @@ module.exports = async (req, res) => {
 https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`);
 
                 case "5":
-                    const txs = await Transaction.find({ phoneNumber: normalizedPhone })
-                        .sort({ createdAt: -1 })
-                        .limit(3);
+                   const { getRecentTransactions } = require("../services/transactionService");
+
+                   const txs = await getRecentTransactions(normalizedPhone);
 
                     if (!txs.length) return res.send("END No transactions");
 
