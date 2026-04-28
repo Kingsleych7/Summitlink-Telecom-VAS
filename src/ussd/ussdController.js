@@ -4,7 +4,7 @@ const Transaction = require("../models/Transaction");
 
 const { normalizePhone } = require("../utils/phone");
 const { getSession, saveSession } = require("../utils/session");
-const { getRequestId } = require("../utils/requestId");
+const { generateRequestId } = require("../utils/requestId");
 
 module.exports = async (req, res) => {
     try {
