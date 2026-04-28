@@ -12,9 +12,7 @@ module.exports = async (req, res) => {
     try {
         const { phoneNumber, text = "" } = req.body;
 
-        const normalizedPhone = normalizePhone(phoneNumber); ✅
-
-        const session = getSession(normalizedPhone); ✅
+        const normalizedPhone = normalizePhone(phoneNumber);
 
         const input = (text || "").trim();
 
@@ -28,10 +26,10 @@ if (text === "") {
         // ======================
         // LOAD SESSION
         // ======================
-        let session = await getSession(phoneNumber) || {
-            state: "PIN",
-            data: {}
-        };
+        let session = await getSession(normalizedPhone) || {
+    state: "PIN",
+    data: {}
+};
 
         // ======================
         // IDEMPOTENCY
