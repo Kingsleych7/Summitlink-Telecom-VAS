@@ -42,6 +42,8 @@ module.exports = async (req, res) => {
         // ======================
         // 4. LOAD USER
         // ======================
+        const { getOrCreateUser } = require("../services/userService");
+
         let user = await getOrCreateUser(normalizedPhone);
 
         if (!user) {
