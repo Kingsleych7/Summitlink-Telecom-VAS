@@ -1,4 +1,4 @@
-const User = require("../../models/User");
+const User = require("../models/User");
 
 const getOrCreateUser = async (phone) => {
     let user = await User.findOne({ phoneNumber: phone });
