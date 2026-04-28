@@ -3,19 +3,23 @@
 const { getSession, saveSession } = require("../utils/session");
 const { getRequestId } = require("../utils/idempotency");
 const sendSMS = require("../services/sms");
-const session = getSession(normalizedPhone);
 
-console.log("SESSION STATE:", session.state);
-console.log("INPUT TEXT:", text);
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 const bcrypt = require("bcryptjs");
 
 module.exports = async (req, res) => {
     try {
-        let { phoneNumber, text = "" } = req.body;
+        const { phoneNumber, text = "" } = req.body;
 
-        text = (text || "").trim();
+        const normalizedPhone = normalizePhone(phoneNumber); ✅
+
+        const session = getSession(normalizedPhone); ✅
+
+        const input = (text || "").trim();
+
+        console.log("SESSION:", session.state);
+        console.log("INPUT:", input);
 
 if (text === "") {
     return res.send("CON Enter your 4-digit PIN:");
