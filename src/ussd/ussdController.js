@@ -1,9 +1,10 @@
 const bcrypt = require("bcryptjs");
-const User = require('../models/User');
+const User = require("../models/User");
+const { getSession, saveSession } = require("../services/sessionService");
+const { getOrCreateUser } = require("../services/userService");
 const Transaction = require("../models/Transaction");
 
 const { normalizePhone } = require("../utils/phone");
-const { getSession, saveSession } = require("../utils/session");
 const { generateRequestId } = require("../utils/requestId");
 
 module.exports = async (req, res) => {
@@ -41,7 +42,7 @@ module.exports = async (req, res) => {
         // ======================
         // 4. LOAD USER
         // ======================
-        let user = await User.findOne({ phoneNumber: normalizedPhone });
+        let user = await getOrCreateUser(normalizedPhone);
 
         if (!user) {
             user = await User.create({
