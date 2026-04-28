@@ -14,23 +14,25 @@ module.exports = async (req, res) => {
         const { phoneNumber, text = "" } = req.body;
 
         const normalizedPhone = normalizePhone(phoneNumber);
-
         const input = (text || "").trim();
+
+        // ======================
+        // LOAD SESSION FIRST
+        // ======================
+        let session = await getSession(normalizedPhone) || {
+            state: "PIN",
+            data: {}
+        };
 
         console.log("SESSION:", session.state);
         console.log("INPUT:", input);
 
+        // ======================
+        // FIRST SCREEN
+        // ======================
         if (text === "") {
             return res.send("CON Enter your 4-digit PIN:");
         }
-
-        // ======================
-        // LOAD SESSION
-        // ======================
-        let session = await getSession(normalizedPhone) || {
-    state: "PIN",
-    data: {}
-};
 
         // ======================
         // IDEMPOTENCY
@@ -44,27 +46,25 @@ module.exports = async (req, res) => {
         session.lastReq = reqId;
 
         // ======================
-        // GET USER
+        // GET USER (FIXED)
         // ======================
-        let user = await User.findOne({ phoneNumber });
+        let user = await User.findOne({ phoneNumber: normalizedPhone });
 
         if (!user) {
-    const hashedPin = await bcrypt.hash("1234", 10);
-
-    user = await User.create({
-        phoneNumber: normalizedPhone,
-        email: normalizedPhone + "@test.com",
-        balance: 1000,
-        pin: hashedPin
-    });
-}
+            user = await User.create({
+                phoneNumber: normalizedPhone,
+                email: normalizedPhone + "@test.com",
+                balance: 1000,
+                pin: "1234" // TEMP FIX (NO bcrypt here)
+            });
+        }
 
         // ======================
         // BACK NAVIGATION
         // ======================
         if (text === "00") {
             session.state = "MENU";
-            await saveSession(phoneNumber, session);
+            await saveSession(normalizedPhone, session);
 
             return res.send(`CON Welcome back
 1. Check Balance
@@ -73,6 +73,14 @@ module.exports = async (req, res) => {
 4. Fund Wallet
 5. Transactions`);
         }
+
+    } catch (err) {
+        console.log("🔥 USSD ERROR:", err);
+        console.log(err?.stack);
+
+        return res.send("END System error");
+    }
+};
 
         // ======================
         // STATE MACHINE
@@ -217,8 +225,10 @@ https://your-backend.onrender.com/paystack/pay/${phoneNumber}/1000`);
 
         return res.send("END Invalid");
 
-    } catch (err) {
-        console.log("USSD ERROR:", err);
-        return res.send("END System error");
-    }
-};
+    catch (err) {
+    console.log("🔥 USSD FULL ERROR:");
+    console.log(err);
+    console.log(err?.stack);
+
+    return res.send("END System error");
+}
