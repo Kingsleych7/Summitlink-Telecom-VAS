@@ -7,7 +7,6 @@ const sendSMS = require("../services/sms");
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 const bcrypt = require("bcryptjs");
-const { getSession, saveSession, clearSession } = require("../utils/session");
 
 module.exports = async (req, res) => {
     try {
