@@ -1,5 +1,5 @@
-const Queue = require("bull");
-
-const airtimeQueue = new Queue("airtime", process.env.REDIS_URL);
-
-module.exports = airtimeQueue;
+module.exports = {
+    add: async (data) => {
+        console.log("🟡 Queue disabled:", data);
+    }
+};
