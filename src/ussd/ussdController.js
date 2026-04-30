@@ -14,6 +14,8 @@ module.exports = async (req, res) => {
         // ======================
         // 1. REQUEST DATA
         // ======================
+        console.log("BODY:", req.body);
+
         const { phoneNumber, text = "" } = req.body;
 
         const normalizedPhone = normalizePhone(phoneNumber);
