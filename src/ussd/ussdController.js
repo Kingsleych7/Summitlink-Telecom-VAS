@@ -18,6 +18,11 @@ module.exports = async (req, res) => {
 
         const { phoneNumber, text = "" } = req.body;
 
+       if (!phoneNumber) {
+    console.log("❌ phoneNumber missing");
+    return res.send("END Missing phone number");
+}
+
         const normalizedPhone = normalizePhone(phoneNumber);
         const input = text.trim();
 
@@ -182,10 +187,11 @@ https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
         // ======================
         return res.send("END Invalid request");
 
+
     } catch (err) {
-        console.log("🔥 USSD ERROR:");
-        console.log(err);
-        console.log(err?.stack);
+        console.log("❌ FULL ERROR:", err);
+        console.log("❌ MESSAGE:", err.message);
+        console.log("❌ STACK:", err.stack);
 
         return res.send("END System error");
     }
