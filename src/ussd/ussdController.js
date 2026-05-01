@@ -9,7 +9,6 @@ const { getOrCreateUser } = require("../services/userService");
 const airtimeQueue = require("../queues/airtimeQueue");
 const dataQueue = require("../queues/dataQueue");
 const { normalizePhone } = require("../utils/phone");
-const { generateRequestId } = require("../utils/requestId");
 
 module.exports = async (req, res) => {
     try {
