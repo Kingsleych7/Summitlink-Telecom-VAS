@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 
-const ussdController = require("./src/ussd/ussdController");
+app.post("/ussd", require("./src/ussd/ussdController"));
 
 const app = express();
 
@@ -14,7 +14,7 @@ const ussdLimiter = rateLimit({
 });
 
 app.use("/ussd", ussdLimiter);
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.post("/ussd", ussdController);
