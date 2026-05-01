@@ -36,6 +36,8 @@ module.exports = async (req, res) => {
             data: {}
         };
 
+       console.log("SESSION:", session.state); // ✅ safe
+
         // ======================
         // 3. IDEMPOTENCY (PREVENT DOUBLE REQUESTS)
         // ======================
@@ -78,11 +80,11 @@ module.exports = async (req, res) => {
         // ======================
         if (session.state === "PIN") {
 
-            const isValid = input === user.pin; // simple first (stable)
+            const isValid = await bcrypt.compare(input, user.pin);
 
             if (!isValid) {
-                return res.send("END ❌ Invalid PIN");
-            }
+            return res.send("END Invalid PIN");
+           }
 
             session.state = "MENU";
             await saveSession(normalizedPhone, session);
