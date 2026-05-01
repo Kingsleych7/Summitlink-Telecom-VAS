@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 
+const bcrypt = require("bcryptjs"); // ✅ use bcryptjs (works in Termux)
+const { generateRequestId } = require("../utils/requestId");
+
 const { getSession, saveSession } = require("../services/sessionService");
 const { getOrCreateUser } = require("../services/userService");
 const airtimeQueue = require("../queues/airtimeQueue");
@@ -41,7 +44,7 @@ module.exports = async (req, res) => {
         // ======================
         // 3. IDEMPOTENCY (PREVENT DOUBLE REQUESTS)
         // ======================
-        const reqId = getRequestId(normalizedPhone, input);
+        const reqId = generateRequestId(normalizedPhone, input);
 
         if (session.lastReq === reqId) {
             return res.send("END Duplicate request");
@@ -80,35 +83,22 @@ module.exports = async (req, res) => {
         // ======================
         if (session.state === "PIN") {
 
-            const isValid = await bcrypt.compare(input, user.pin);
+    if (input !== user.pin) {
+        return res.send("END Invalid PIN");
+    }
 
-            if (!isValid) {
-            return res.send("END Invalid PIN");
-           }
+    session.state = "MENU";
+    await saveSession(normalizedPhone, session);
 
-            session.state = "MENU";
-            await saveSession(normalizedPhone, session);
-
-            return res.send(`CON Welcome to SummitLink
+    return res.send(`CON Welcome to SummitLink
 1. Check Balance
 2. Buy Airtime
 3. Buy Data
 4. Fund Wallet
 5. Transactions`);
-        }
+}
 
-        // ======================
-        // 7. MAIN MENU
-        // ======================
-        if (session.state === "MENU") {
-
-    switch (input) {
-
-        case "1":
-            return res.send(`END Balance: ₦${user.balance}`);
-
-        case "2":
-            if (session.state === "AIRTIME") {
+     if (session.state === "AIRTIME") {
 
     const amount = parseInt(input);
 
@@ -116,47 +106,54 @@ module.exports = async (req, res) => {
         return res.send("END Invalid amount");
     }
 
-    await airtimeQueue.add({
-        phoneNumber: normalizedPhone,
-        amount
-    });
+    console.log("Airtime:", amount);
 
     session.state = "MENU";
     await saveSession(normalizedPhone, session);
 
-    return res.send("END Airtime request is being processed");
+    return res.send("END Airtime request received");
 }
 
-       case "3":
+
      if (session.state === "DATA") {
 
     let plan;
 
-    switch (input) {
-        case "1":
-            plan = "1GB - ₦300";
-            break;
-        case "2":
-            plan = "2GB - ₦500";
-            break;
-        case "3":
-            plan = "5GB - ₦1200";
-            break;
-        default:
-            return res.send("END Invalid plan selected");
-    }
+    if (input === "1") plan = "1GB";
+    else if (input === "2") plan = "2GB";
+    else if (input === "3") plan = "5GB";
+    else return res.send("END Invalid plan");
 
-    await dataQueue.add({
-        phoneNumber: normalizedPhone,
-        plan
-    });
+    console.log("Data:", plan);
 
     session.state = "MENU";
     await saveSession(normalizedPhone, session);
 
-    return res.send("END Data purchase is being processed");
+    return res.send("END Data request received");
 }
 
+        // ======================
+        // 7. MAIN MENU
+        // ======================
+      if (session.state === "MENU") {
+
+    switch (input) {
+
+        case "1":
+            return res.send(`END Balance: ₦${user.balance}`);
+
+        case "2":
+            session.state = "AIRTIME";
+            await saveSession(normalizedPhone, session);
+            return res.send("CON Enter airtime amount:");
+
+        case "3":
+            session.state = "DATA";
+            await saveSession(normalizedPhone, session);
+            return res.send(`CON Select plan:
+1. 1GB - ₦300
+2. 2GB - ₦500
+3. 5GB - ₦1200`);
 
         case "4":
             return res.send(
@@ -165,19 +162,7 @@ https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
             );
 
         case "5":
-            const txs = await getRecentTransactions(normalizedPhone);
-
-            if (!txs.length) {
-                return res.send("END No transactions");
-            }
-
-            let msg = "END Recent Transactions:\n";
-
-            txs.forEach(t => {
-                msg += `${t.type} ₦${t.amount}\n`;
-            });
-
-            return res.send(msg);
+            return res.send("END Transactions coming soon");
 
         default:
             return res.send("END Invalid option");
