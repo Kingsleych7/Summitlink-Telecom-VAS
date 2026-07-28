@@ -9,7 +9,6 @@ const { getOrCreateUser } = require("../services/userService");
 const airtimeQueue = require("../queues/airtimeQueue");
 const dataQueue = require("../queues/dataQueue");
 const { normalizePhone } = require("../utils/phone");
-
 module.exports = async (req, res) => {
     try {
 
@@ -24,20 +23,25 @@ module.exports = async (req, res) => {
     console.log("❌ phoneNumber missing");
     return res.send("END Missing phone number");
 }
-
+        const input = text ? text.split("*").pop().trim() : "";
         const normalizedPhone = normalizePhone(phoneNumber);
-        const input = text.trim();
 
+        console.log("TEXT:", text);
+        console.log("INPUT:", input);
+        console.log("STATE:", session.state);
         console.log("📩 USSD REQUEST:", { normalizedPhone, input });
 
         // ======================
         // 2. LOAD SESSION
         // ======================
-        let session = await getSession(normalizedPhone) || {
-            state: "PIN",
-            data: {}
-        };
+        let session = await getSession(normalizedPhone);
 
+if (!session) {
+    session = {
+        state: "PIN",
+        data: {}
+    };
+}
        console.log("SESSION:", session.state); // ✅ safe
 
         // ======================
@@ -80,7 +84,7 @@ module.exports = async (req, res) => {
         // ======================
         // 6. PIN VALIDATION
         // ======================
-        if (session.state === "PIN") {
+       if (session.state === "PIN") {
 
     if (input !== user.pin) {
         return res.send("END Invalid PIN");
@@ -89,14 +93,13 @@ module.exports = async (req, res) => {
     session.state = "MENU";
     await saveSession(normalizedPhone, session);
 
-    return res.send(`CON Welcome to SummitLink
+    return res.send(`CON Welcome
 1. Check Balance
 2. Buy Airtime
 3. Buy Data
 4. Fund Wallet
 5. Transactions`);
 }
-
      if (session.state === "AIRTIME") {
 
     const amount = parseInt(input);
@@ -134,7 +137,9 @@ module.exports = async (req, res) => {
         // ======================
         // 7. MAIN MENU
         // ======================
-      if (session.state === "MENU") {
+       if (session.state === "MENU") {
+
+    console.log("👉 MENU BLOCK REACHED");
 
     switch (input) {
 
@@ -144,7 +149,7 @@ module.exports = async (req, res) => {
         case "2":
             session.state = "AIRTIME";
             await saveSession(normalizedPhone, session);
-            return res.send("CON Enter airtime amount:");
+            return res.send("CON Enter airtime amount");
 
         case "3":
             session.state = "DATA";
@@ -157,7 +162,7 @@ module.exports = async (req, res) => {
         case "4":
             return res.send(
                 `END Fund Wallet:
-https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
+https://summitlink-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
             );
 
         case "5":
@@ -166,6 +171,18 @@ https://your-backend.onrender.com/paystack/pay/${normalizedPhone}/1000`
         default:
             return res.send("END Invalid option");
     }
+}
+
+
+      if (session.state === "AIRTIME") {
+    const amount = parseInt(input);
+
+    if (!amount) return res.send("END Invalid amount");
+
+    session.state = "MENU";
+    await saveSession(normalizedPhone, session);
+
+    return res.send("END Airtime request received");
 }
 
         // ======================
